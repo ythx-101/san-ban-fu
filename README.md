@@ -32,7 +32,7 @@ codex --version
 
 ```bash
 # 克隆仓库
-git clone https://github.com/anthropics/san-ban-fu.git
+git clone https://github.com/ythx-101/san-ban-fu.git
 cd san-ban-fu
 
 # 或者直接下载脚本
