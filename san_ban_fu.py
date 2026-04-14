@@ -126,15 +126,13 @@ def phase_generate(topic: str, cwd: Path) -> bool:
 
 **议题**: {topic}
 
-**工作目录**: {cwd}
-
 **要求**:
 1. 生成完整可运行的代码
 2. 代码简洁，有必要注释
 3. 包含 README.md 说明用法
 4. 包含 requirements.txt（如果是 Python）
 
-直接用 Write 工具把文件写到 {cwd}/"""
+直接用 Write 工具把文件写到当前工作目录。"""
 
     try:
         call_claude(prompt, cwd)
@@ -204,7 +202,7 @@ def phase_fix(cwd: Path, review: str, round_num: int) -> bool:
 
 {review}
 
-请根据审核意见修复代码。工作目录: {cwd}
+请根据审核意见修复当前工作目录中的代码。
 
 只修复被指出的问题，不要做额外的改动。"""
 
@@ -316,8 +314,25 @@ def main():
     print("  ╚═══════════════════════════════════════╝")
     print()
 
+    # 显示路径：相对路径优先，否则显示完整路径（隐私 vs 可用性权衡）
+    # 兼容 Python 3.8（不用 is_relative_to）
+    def safe_relative_to(path: Path, base: Path) -> str:
+        try:
+            return str(path.relative_to(base))
+        except ValueError:
+            return ""
+
+    cwd_rel = safe_relative_to(cwd, Path.cwd())
+    home_rel = safe_relative_to(cwd, Path.home())
+
+    if cwd_rel:
+        display_dir = f"./{cwd_rel}"
+    elif home_rel:
+        display_dir = f"~/{home_rel}"
+    else:
+        display_dir = str(cwd)
     log(f"议题: {args.topic}", "INFO")
-    log(f"目录: {cwd}", "INFO")
+    log(f"目录: {display_dir}", "INFO")
     log(f"轮数: {args.rounds}", "INFO")
     print()
 
@@ -357,12 +372,12 @@ def main():
     # 生成报告
     print()
     report_path = generate_report(args.topic, cwd, len(reviews), reviews)
-    log(f"审核报告: {report_path}", "OK")
+    log(f"审核报告: {report_path.name}", "OK")
 
     print()
     log("=" * 50, "INFO")
     log("三板斧完成!", "OK")
-    log(f"输出目录: {cwd}", "INFO")
+    log(f"输出目录: {display_dir}", "INFO")
     log(f"审核轮数: {len(reviews)}", "INFO")
 
     print()
